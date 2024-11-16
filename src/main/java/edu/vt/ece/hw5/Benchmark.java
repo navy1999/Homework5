@@ -83,9 +83,24 @@ public class Benchmark {
     Hint: Use System.nanoTime and ThreadLocalRandom.current for execution time
     and Random number generation (for randomizing set operations). */
     private static long doStuff(int index) {
-        
-        /* YOUR IMPLEMENTATION HERE */
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        long startTime = System.nanoTime();
 
-        return //Execution time;
+        for (int i = 0; i < ITERATIONS; i++) {
+            float operation = random.nextFloat();
+            int value = random.nextInt(UPPER_BOUND);
+
+            if (operation < ADD_LIMIT) {
+                mySet.add(value);
+            } else if (operation < ADD_LIMIT + REMOVE_LIMIT) {
+                mySet.remove(value);
+            } else {
+                boolean result = mySet.contains(value);
+                containsResults[index * BYTE_PADDING] = result;
+            }
+        }
+
+        long endTime = System.nanoTime();
+        return endTime - startTime;
     }
 }

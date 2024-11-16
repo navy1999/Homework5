@@ -1,5 +1,8 @@
 package edu.vt.ece.hw5.sets;
 
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 public class OptimisticSet<T> implements Set<T> {
     private final Node<T> head;
 
@@ -9,25 +12,106 @@ public class OptimisticSet<T> implements Set<T> {
     }
 
     private boolean validate(Node<T> pred, Node<T> curr) {
-        /* YOUR IMPLEMENTATION HERE */
+        Node<T> node = head;
+        while (node.key <= pred.key) {
+            if (node == pred)
+                return pred.next == curr;
+            node = node.next;
+        }
+        return false;
     }
 
     @Override
     public boolean add(T item) {
-        /* YOUR IMPLEMENTATION HERE */
+        int key = item.hashCode();
+        while (true) {
+            Node<T> pred = head;
+            Node<T> curr = pred.next;
+            while (curr.key < key) {
+                pred = curr;
+                curr = curr.next;
+            }
+            pred.lock();
+            try {
+                curr.lock();
+                try {
+                    if (validate(pred, curr)) {
+                        if (curr.key == key) {
+                            return false;
+                        } else {
+                            Node<T> node = new Node<>(item, curr);
+                            pred.next = node;
+                            return true;
+                        }
+                    }
+                } finally {
+                    curr.unlock();
+                }
+            } finally {
+                pred.unlock();
+            }
+        }
     }
 
     @Override
     public boolean remove(T item) {
-        /* YOUR IMPLEMENTATION HERE */
+        int key = item.hashCode();
+        while (true) {
+            Node<T> pred = head;
+            Node<T> curr = pred.next;
+            while (curr.key < key) {
+                pred = curr;
+                curr = curr.next;
+            }
+            pred.lock();
+            try {
+                curr.lock();
+                try {
+                    if (validate(pred, curr)) {
+                        if (curr.key != key) {
+                            return false;
+                        } else {
+                            pred.next = curr.next;
+                            return true;
+                        }
+                    }
+                } finally {
+                    curr.unlock();
+                }
+            } finally {
+                pred.unlock();
+            }
+        }
     }
 
     @Override
     public boolean contains(T item) {
-        /* YOUR IMPLEMENTATION HERE */
+        int key = item.hashCode();
+        while (true) {
+            Node<T> pred = head;
+            Node<T> curr = pred.next;
+            while (curr.key < key) {
+                pred = curr;
+                curr = curr.next;
+            }
+            pred.lock();
+            try {
+                curr.lock();
+                try {
+                    if (validate(pred, curr)) {
+                        return (curr.key == key);
+                    }
+                } finally {
+                    curr.unlock();
+                }
+            } finally {
+                pred.unlock();
+            }
+        }
     }
 
     private static class Node<U> {
+        private final Lock lock = new ReentrantLock();
         int key;
         Node<U> next;
 
@@ -40,5 +124,14 @@ public class OptimisticSet<T> implements Set<T> {
             this.key = key;
             next = null;
         }
+
+        public void lock() {
+            lock.lock();
+        }
+
+        public void unlock() {
+            lock.unlock();
+        }
     }
+
 }
