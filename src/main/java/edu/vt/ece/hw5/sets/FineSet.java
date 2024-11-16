@@ -88,26 +88,24 @@ public class FineSet<T> implements Set<T> {
     }
 
     private static class Node<U> {
-        private final Lock lock = new ReentrantLock();
-        int key;
+        final Lock lock = new ReentrantLock();
+        final int key;
         Node<U> next;
+        final U item;
 
         public Node(U item, Node<U> next) {
+            this.item = item;
             this.key = item.hashCode();
             this.next = next;
         }
 
         public Node(int key) {
+            this.item = null;
             this.key = key;
-            next = null;
+            this.next = null;
         }
 
-        public void lock() {
-            lock.lock();
-        }
-
-        public void unlock() {
-            lock.unlock();
-        }
+        void lock() { lock.lock(); }
+        void unlock() { lock.unlock(); }
     }
 }

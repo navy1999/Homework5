@@ -12,7 +12,7 @@ public class LazySet<T> implements Set<T> {
     }
 
     private boolean validate(Node<T> pred, Node<T> curr) {
-        return !pred.isMarked() && !curr.isMarked() && pred.next == curr;
+        return !pred.marked && !curr.marked && pred.next == curr;
     }
 
     @Override
@@ -33,8 +33,8 @@ public class LazySet<T> implements Set<T> {
                         if (curr.key == key) {
                             return false;
                         } else {
-                            Node<T> newNode = new Node<>(item, curr);
-                            pred.next = newNode;
+                            Node<T> node = new Node<>(item, curr);
+                            pred.next = node;
                             return true;
                         }
                     }
@@ -65,7 +65,7 @@ public class LazySet<T> implements Set<T> {
                         if (curr.key != key) {
                             return false;
                         } else {
-                            curr.mark();
+                            curr.marked = true;
                             pred.next = curr.next;
                             return true;
                         }
@@ -83,44 +83,33 @@ public class LazySet<T> implements Set<T> {
     public boolean contains(T item) {
         int key = item.hashCode();
         Node<T> curr = head;
-        while (curr.key < key) {
+        while (curr.key < key)
             curr = curr.next;
-        }
-        return curr.key == key && !curr.isMarked();
+        return curr.key == key && !curr.marked;
     }
 
     private static class Node<U> {
-        private final Lock lock = new ReentrantLock();
-        int key;
-        Node<U> next;
-        private boolean marked;
+        final Lock lock = new ReentrantLock();
+        final int key;
+        volatile Node<U> next;
+        volatile boolean marked;
+        final U item;
 
-        public Node(U item, Node<U> next) {
+        Node(U item, Node<U> next) {
+            this.item = item;
             this.key = item.hashCode();
             this.next = next;
             this.marked = false;
         }
 
-        public Node(int key) {
+        Node(int key) {
+            this.item = null;
             this.key = key;
-            next = null;
+            this.next = null;
             this.marked = false;
         }
 
-        public void lock() {
-            lock.lock();
-        }
-
-        public void unlock() {
-            lock.unlock();
-        }
-
-        public void mark() {
-            marked = true;
-        }
-
-        public boolean isMarked() {
-            return marked;
-        }
+        void lock() { lock.lock(); }
+        void unlock() { lock.unlock(); }
     }
 }

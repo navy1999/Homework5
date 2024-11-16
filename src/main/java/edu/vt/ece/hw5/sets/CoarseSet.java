@@ -54,17 +54,20 @@ public class CoarseSet<T> implements Set<T> {
     }
 
     private static class Node<U> {
-        int key;
+        final int key;
         Node<U> next;
+        final U item;
 
         public Node(U item, Node<U> next) {
+            this.item = item;
             this.key = item.hashCode();
             this.next = next;
         }
 
         public Node(int key) {
+            this.item = null;
             this.key = key;
-            next = null;
+            this.next = null;
         }
     }
 }

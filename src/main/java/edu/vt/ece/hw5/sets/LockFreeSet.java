@@ -6,7 +6,7 @@ public class LockFreeSet<T> implements Set<T> {
     private final Node<T> head;
 
     public LockFreeSet() {
-        Node<T> tail = new Node<>(Integer.MAX_VALUE);
+        Node<T> tail = new Node<>(Integer.MAX_VALUE, null);
         head = new Node<>(Integer.MIN_VALUE, tail);
     }
 
@@ -81,15 +81,18 @@ public class LockFreeSet<T> implements Set<T> {
     }
 
     private static class Node<U> {
-        int key;
-        AtomicMarkableReference<Node<U>> next;
+        final int key;
+        final U item;
+        final AtomicMarkableReference<Node<U>> next;
 
         public Node(U item, Node<U> next) {
-            this.key = item.hashCode();
+            this.item = item;
+            this.key = (item != null) ? item.hashCode() : 0;
             this.next = new AtomicMarkableReference<>(next, false);
         }
 
         public Node(int key, Node<U> next) {
+            this.item = null;
             this.key = key;
             this.next = new AtomicMarkableReference<>(next, false);
         }
