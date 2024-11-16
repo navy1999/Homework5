@@ -1,5 +1,8 @@
 package edu.vt.ece.hw5;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -22,10 +25,19 @@ public class Benchmark {
     private static float REMOVE_LIMIT;
 
     public static void main(String[] args) throws Exception {
+        if (args.length != 3) {
+            System.out.println("Usage: java Benchmark <setType> <threadCount> <containsPercentage>");
+            return;
+        }
+
         String setType = args[0];
         int threadCount = Integer.parseInt(args[1]);
         float containsPercentage = Float.parseFloat(args[2]);
 
+        runBenchmark(setType, threadCount, containsPercentage);
+    }
+
+    private static void runBenchmark(String setType, int threadCount, float containsPercentage) throws Exception {
         ADD_LIMIT = (1 - containsPercentage) / 2;
         REMOVE_LIMIT = ADD_LIMIT + (1 - containsPercentage) / 2;
 
@@ -46,7 +58,11 @@ public class Benchmark {
 
         double throughput = (double) (threadCount * ITERATIONS) / ((endTime - startTime) / 1_000_000_000.0);
 
-        System.out.println("Throughput: " + throughput + " ops/sec");
+        System.out.printf("SetType: %s, Threads: %d, Contains%%: %.2f, Throughput: %.2f ops/sec%n",
+                setType, threadCount, containsPercentage, throughput);
+
+        writeResultToCSV(setType, threadCount, containsPercentage, throughput);
+
         excs.shutdown();
     }
 
@@ -96,5 +112,19 @@ public class Benchmark {
 
         long endTime = System.nanoTime();
         return endTime - startTime;
+    }
+
+    private static void writeResultToCSV(String setType, int threadCount, float containsPercentage, double throughput) {
+        String fileName = "benchmark_results.csv";
+        boolean fileExists = new File(fileName).exists();
+
+        try (FileWriter writer = new FileWriter(fileName, true)) {
+            if (!fileExists) {
+                writer.write("SetType,ThreadCount,ContainsPercentage,Throughput\n");
+            }
+            writer.write(String.format("%s,%d,%.2f,%.2f\n", setType, threadCount, containsPercentage, throughput));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
