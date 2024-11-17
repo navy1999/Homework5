@@ -6,7 +6,7 @@
 set_types=("CoarseSet" "FineSet" "LazySet" "LockFreeSet" "OptimisticSet")
 
 # Array of thread counts
-thread_counts=(4 8 12 16 20 24 32 40)
+thread_counts=(4 8 12 16 20 24 28 32 36 40)
 
 # Array of contains percentages
 contains_percentages=(20 40 60 80)
